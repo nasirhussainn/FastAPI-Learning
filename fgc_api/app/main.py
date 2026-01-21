@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import asyncio
+from fastapi import HTTPException
+from .models.schema import DeviceConfig
+
 
 app = FastAPI(
     title="FGC API",
@@ -15,3 +18,35 @@ app = FastAPI(
 async def health_check():
     await asyncio.sleep(5)
     return {"status": "ok"}
+
+
+# device_id: int → automatic validation
+# Invalid input → 422 Unprocessable Entity
+# No manual parsing needed
+# @app.get("/devices/{device_id}")
+# def get_device(
+#     device_id: int,
+#     include_config: bool = False
+# ):
+#     if device_id <= 0:
+#         raise HTTPException(status_code=400, detail="Invalid device ID")
+
+#     return {
+#         "device_id": device_id,
+#         "include_config": include_config
+#     }
+
+@app.post("/devices/{device_id}/config")
+def update_config(device_id: int, config: DeviceConfig):
+    return {
+        "device_id": device_id,
+        "config": config
+    }
+    
+@app.get("/devices/{device_id}", response_model=DeviceConfig)
+def get_device(device_id: int):
+    return {
+        "voltage": 1.3333,
+        "current": 1,
+        "enabled": True
+    }
