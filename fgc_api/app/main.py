@@ -3,6 +3,7 @@ import asyncio
 from fastapi import HTTPException, Depends
 from .models.schema import DeviceConfig
 from .core.config import settings
+from .core.db import get_db
 
 app = FastAPI(
     title="FGC API",
@@ -69,3 +70,23 @@ def app_info(settings=Depends(get_settings)):
 # @app.get("/info")
 # def app_info():
 #     return {"app": settings.app_name}
+
+
+# “Database sessions must be request-scoped. Sharing sessions across concurrent 
+# requests can corrupt transactions.”
+# One DB session per request
+# Proper cleanup
+# Thread-safe
+@app.get("/list_device")
+def list_devices(db=Depends(get_db)):
+    return db.execute("SELECT * FROM devices").fetchall()
+
+
+# Shared DB session across requests
+# Race conditions
+# Connection leaks
+# db = SessionLocal()
+# @app.get("/devices")
+# def list_devices():
+#     return db.execute("SELECT * FROM devices")
+
