@@ -3,7 +3,7 @@ import asyncio
 from fastapi import HTTPException, Depends
 from .models.schema import DeviceConfig
 from .core.config import settings
-from .core.db import get_db
+from .core.db import get_db, get_async_db
 
 app = FastAPI(
     title="FGC API",
@@ -36,6 +36,14 @@ async def health_check():
 #         "device_id": device_id,
 #         "include_config": include_config
 #     }
+
+def get_current_user():
+    return {"role": "expert"}
+
+def require_expert(user=Depends(get_current_user)):
+    if user["role"] != "expert":
+        raise HTTPException(status_code=403)
+    return user
 
 @app.post("/devices/{device_id}/config")
 def update_config(device_id: int, config: DeviceConfig):
@@ -90,3 +98,21 @@ def list_devices(db=Depends(get_db)):
 # def list_devices():
 #     return db.execute("SELECT * FROM devices")
 
+
+# “Async endpoints must only perform non-blocking I/O. Mixing sync database calls 
+# inside async functions defeats the purpose of ASGI.”
+# @app.get("/list_devices_async")
+# async def list_devices(db: AsyncSession = Depends(get_async_db)):
+#     result = await db.execute("SELECT * FROM devices")
+#     return result.fetchall()
+
+
+# “Dependency chains allow us to enforce authorization and validation consistently across 
+# endpoints without duplicating logic.”
+# @app.post("/devices/{id}/configs")
+# def update_config(
+#     id: int,
+#     user=Depends(require_expert),
+#     db=Depends(get_db)
+# ):
+#     return {"status": "updated"}
