@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 import asyncio
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from .models.schema import DeviceConfig
-
+from .core.config import settings
 
 app = FastAPI(
     title="FGC API",
@@ -50,3 +50,22 @@ def get_device(device_id: int):
         "current": 1,
         "enabled": True
     }
+    
+def get_settings():
+    return settings
+
+# Depends() tells FastAPI to resolve the dependency
+# Settings are injected per request
+# No global coupling inside endpoint logic
+@app.get("/info")
+def app_info(settings=Depends(get_settings)):
+    return {
+        "app": settings.app_name,
+        "debug": settings.debug
+    }
+
+# “Using dependencies instead of globals allows configuration to be overridden 
+# in tests and keeps the endpoint logic decoupled from environment concerns.”
+# @app.get("/info")
+# def app_info():
+#     return {"app": settings.app_name}
