@@ -1,3 +1,4 @@
+from fastapi import FastAPI
 app = FastAPI(
     title="FGC API",
     description="API for managing power converter devices",
